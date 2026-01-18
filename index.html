@@ -7,7 +7,7 @@
 
 <style>
   body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: system-ui, sans-serif;
     margin: 20px;
     background: #0f1115;
     color: #eaeaf0;
@@ -18,12 +18,12 @@
   .controls {
     display: flex;
     gap: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     flex-wrap: wrap;
     align-items: center;
   }
 
-  input, select {
+  input, select, button {
     padding: 6px 8px;
     font-size: 14px;
   }
@@ -37,16 +37,19 @@
   th, td {
     border: 1px solid #2a2f45;
     padding: 6px 8px;
-    text-align: left;
-    vertical-align: middle;
   }
 
   th { background: #1c2030; }
 
   tr:hover { background: #1f2440; }
 
-  audio {
-    width: 180px;
+  audio { width: 170px; }
+
+  .pager {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
   }
 
   .count {
@@ -60,11 +63,10 @@
 <h1>🎮 Minecraft Sounds</h1>
 
 <div class="controls">
-  <input id="search" placeholder="名前 / タグで検索">
+  <input id="search" placeholder="名前 / タグ検索">
   <select id="tagFilter">
     <option value="">すべてのタグ</option>
   </select>
-  <div class="count" id="count"></div>
 </div>
 
 <table>
@@ -78,15 +80,26 @@
   <tbody id="list"></tbody>
 </table>
 
+<div class="pager">
+  <button id="prev">◀ 前</button>
+  <span id="pageInfo"></span>
+  <button id="next">次 ▶</button>
+  <div class="count" id="count"></div>
+</div>
+
 <script>
+const PAGE_SIZE = 200;
+
 let sounds = [];
+let filtered = [];
+let page = 1;
 
 fetch("data/sounds.json")
   .then(r => r.json())
   .then(data => {
     sounds = data;
     initTags(data);
-    render(data);
+    applyFilter();
   });
 
 function initTags(data) {
@@ -100,26 +113,54 @@ function initTags(data) {
   }
 }
 
-document.getElementById("search").addEventListener("input", update);
-document.getElementById("tagFilter").addEventListener("change", update);
+document.getElementById("search").addEventListener("input", () => {
+  page = 1;
+  applyFilter();
+});
 
-function update() {
+document.getElementById("tagFilter").addEventListener("change", () => {
+  page = 1;
+  applyFilter();
+});
+
+document.getElementById("prev").onclick = () => {
+  if (page > 1) {
+    page--;
+    render();
+  }
+};
+
+document.getElementById("next").onclick = () => {
+  if (page < maxPage()) {
+    page++;
+    render();
+  }
+};
+
+function applyFilter() {
   const q = document.getElementById("search").value.toLowerCase();
   const tag = document.getElementById("tagFilter").value;
 
-  render(
-    sounds.filter(s =>
-      (!q || s.name.toLowerCase().includes(q) || s.tag.toLowerCase().includes(q)) &&
-      (!tag || s.tag === tag)
-    )
+  filtered = sounds.filter(s =>
+    (!q || s.name.toLowerCase().includes(q) || s.tag.toLowerCase().includes(q)) &&
+    (!tag || s.tag === tag)
   );
+
+  render();
 }
 
-function render(list) {
+function maxPage() {
+  return Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+}
+
+function render() {
   const tbody = document.getElementById("list");
   tbody.innerHTML = "";
 
-  for (const s of list) {
+  const start = (page - 1) * PAGE_SIZE;
+  const end = start + PAGE_SIZE;
+
+  for (const s of filtered.slice(start, end)) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${s.name}</td>
@@ -128,14 +169,17 @@ function render(list) {
         <audio controls preload="none">
           <source src="${s.path}" type="audio/mpeg">
         </audio>
-        <a href="${s.path}" download style="margin-left:6px">⬇</a>
+        <a href="${s.path}" download>⬇</a>
       </td>
     `;
     tbody.appendChild(tr);
   }
 
+  document.getElementById("pageInfo").textContent =
+    `Page ${page} / ${maxPage()}`;
+
   document.getElementById("count").textContent =
-    `${list.length} / ${sounds.length}`;
+    `${filtered.length} 件`;
 }
 </script>
 
