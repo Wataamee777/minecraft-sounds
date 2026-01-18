@@ -1,5 +1,8 @@
 name: Generate sounds.json
 
+permissions:
+  contents: write
+
 on:
   push:
     paths:
