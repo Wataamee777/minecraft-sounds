@@ -24,46 +24,47 @@ jobs:
 
           first=true
 
-          find "$ROOT" -type f -name "*.mp3" | sort | while read -r file; do
+          while read -r file; do
             rel="${file#$ROOT/}"
             name="$(basename "$file" .mp3)"
             rawTag="${rel%%/*}"
-          case "$rawTag" in
-            ambient) tag="環境音" ;;
-            armor) tag="防具" ;;
-            block) tag="ブロック" ;;
-            bottle) tag="瓶" ;;
-            bubbles) tag="泡" ;;
-            bucket) tag="バケツ" ;;
-            camera) tag="カメラ" ;;
-            cave) tag="洞窟" ;;
-            component) tag="コンポーネント" ;;
-            crossbow) tag="クロスボウ" ;;
-            damage) tag="ダメージ" ;;
-            dig) tag="採掘" ;;
-            elytra) tag="エリトラ" ;;
-            enchant) tag="エンチャント" ;;
-            event) tag="イベント" ;;
-            fireworks) tag="花火" ;;
-            fire) tag="火" ;;
-            item) tag="アイテム" ;;
-            jump) tag="ジャンプ" ;;
-            lead) tag="リード" ;;
-            leashknot) tag="リード結び目" ;;
-            liquid) tag="液体" ;;
-            minecart) tag="トロッコ" ;;
-            mob) tag="モブ" ;;
-            note) tag="音ブロック" ;;
-            particle) tag="パーティクル" ;;
-            portal) tag="ポータル" ;;
-            random) tag="ランダム" ;;
-            sniffer_egg) tag="スニファーの卵" ;;
-            step) tag="足音" ;;
-            tile) tag="タイル" ;;
-            ui) tag="UI" ;;
-            vr) tag="VR" ;;
-            *) tag="$rawTag" ;;
-         esac
+
+            case "$rawTag" in
+              ambient) tag="環境音" ;;
+              armor) tag="防具" ;;
+              block) tag="ブロック" ;;
+              bottle) tag="瓶" ;;
+              bubbles) tag="泡" ;;
+              bucket) tag="バケツ" ;;
+              camera) tag="カメラ" ;;
+              cave) tag="洞窟" ;;
+              component) tag="コンポーネント" ;;
+              crossbow) tag="クロスボウ" ;;
+              damage) tag="ダメージ" ;;
+              dig) tag="採掘" ;;
+              elytra) tag="エリトラ" ;;
+              enchant) tag="エンチャント" ;;
+              event) tag="イベント" ;;
+              fireworks) tag="花火" ;;
+              fire) tag="火" ;;
+              item) tag="アイテム" ;;
+              jump) tag="ジャンプ" ;;
+              lead) tag="リード" ;;
+              leashknot) tag="リード結び目" ;;
+              liquid) tag="液体" ;;
+              minecart) tag="トロッコ" ;;
+              mob) tag="モブ" ;;
+              note) tag="音ブロック" ;;
+              particle) tag="パーティクル" ;;
+              portal) tag="ポータル" ;;
+              random) tag="ランダム" ;;
+              sniffer_egg) tag="スニファーの卵" ;;
+              step) tag="足音" ;;
+              tile) tag="タイル" ;;
+              ui) tag="UI" ;;
+              vr) tag="VR" ;;
+              *) tag="$rawTag" ;;
+            esac
 
             if [ "$first" = true ]; then
               first=false
@@ -71,15 +72,14 @@ jobs:
               echo "," >> "$OUT"
             fi
 
-            cat >> "$OUT" <<EOF
-            {
-              "name": "$name",
-              "path": "$file",
-              "tag": "$tag",
-              "rawTag": "$rawTag"
-            }
-EOF
-          done
+            echo "  {" >> "$OUT"
+            echo "    \"name\": \"$name\"," >> "$OUT"
+            echo "    \"path\": \"$file\"," >> "$OUT"
+            echo "    \"tag\": \"$tag\"," >> "$OUT"
+            echo "    \"rawTag\": \"$rawTag\"" >> "$OUT"
+            echo "  }" >> "$OUT"
+
+          done < <(find "$ROOT" -type f -name "*.mp3" | sort)
 
           echo "]" >> "$OUT"
 
