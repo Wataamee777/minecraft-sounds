@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>Minecraft Sounds Library</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<style>
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 20px;
+    background: #0f1115;
+    color: #eaeaf0;
+  }
+
+  h1 { margin-bottom: 10px; }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  input, select {
+    padding: 6px 8px;
+    font-size: 14px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #151822;
+  }
+
+  th, td {
+    border: 1px solid #2a2f45;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  th { background: #1c2030; }
+
+  tr:hover { background: #1f2440; }
+
+  audio {
+    width: 180px;
+  }
+
+  .count {
+    margin-left: auto;
+    opacity: 0.8;
+  }
+</style>
+</head>
+
+<body>
+<h1>🎮 Minecraft Sounds</h1>
+
+<div class="controls">
+  <input id="search" placeholder="名前 / タグで検索">
+  <select id="tagFilter">
+    <option value="">すべてのタグ</option>
+  </select>
+  <div class="count" id="count"></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>名前</th>
+      <th>タグ</th>
+      <th>再生 / DL</th>
+    </tr>
+  </thead>
+  <tbody id="list"></tbody>
+</table>
+
+<script>
+let sounds = [];
+
+fetch("data/sounds.json")
+  .then(r => r.json())
+  .then(data => {
+    sounds = data;
+    initTags(data);
+    render(data);
+  });
+
+function initTags(data) {
+  const tags = [...new Set(data.map(s => s.tag))].sort();
+  const sel = document.getElementById("tagFilter");
+  for (const t of tags) {
+    const o = document.createElement("option");
+    o.value = t;
+    o.textContent = t;
+    sel.appendChild(o);
+  }
+}
+
+document.getElementById("search").addEventListener("input", update);
+document.getElementById("tagFilter").addEventListener("change", update);
+
+function update() {
+  const q = document.getElementById("search").value.toLowerCase();
+  const tag = document.getElementById("tagFilter").value;
+
+  render(
+    sounds.filter(s =>
+      (!q || s.name.toLowerCase().includes(q) || s.tag.toLowerCase().includes(q)) &&
+      (!tag || s.tag === tag)
+    )
+  );
+}
+
+function render(list) {
+  const tbody = document.getElementById("list");
+  tbody.innerHTML = "";
+
+  for (const s of list) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${s.name}</td>
+      <td>${s.tag}</td>
+      <td>
+        <audio controls preload="none">
+          <source src="${s.path}" type="audio/mpeg">
+        </audio>
+        <a href="${s.path}" download style="margin-left:6px">⬇</a>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById("count").textContent =
+    `${list.length} / ${sounds.length}`;
+}
+</script>
+
+</body>
+</html>
